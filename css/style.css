@@ -179,13 +179,13 @@ h6 {
     background-color: rgb(90, 125, 188);
   }
 }
-@media (max-width: 22.5em) {
+@media (max-width: 28.125em) {
   .header__link {
     background-color: rgb(90, 125, 188);
     color: #fff;
   }
 }
-@media (max-width: 22.5em) and (any-hover: hover) {
+@media (max-width: 28.125em) and (any-hover: hover) {
   .header__link:hover {
     color: #fff;
     background-color: rgb(90, 125, 188);

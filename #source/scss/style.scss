@@ -437,7 +437,7 @@ h6 {
 			right: toRem(11);
 			border-radius: 0 50px;
 			z-index: -1;
-			background: url("/img/main-image.jpg") center / cover no-repeat;
+			background: url("../img/main-image.jpg") center / cover no-repeat;
 		}
 		@media (max-width: em(1190)) {
 			&::before {
@@ -520,7 +520,7 @@ h6 {
 //========================================================================================================================================================
 .skills-range {
 	background-color: #333;
-	padding: toRem(15) 0;
+	padding: toRem(35) 0;
 	&__container {
 	}
 	&__row {

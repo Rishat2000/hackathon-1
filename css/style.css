@@ -427,7 +427,7 @@ h6 {
   right: 0.6875rem;
   border-radius: 0 50px;
   z-index: -1;
-  background: url("/img/main-image.jpg") center/cover no-repeat;
+  background: url("../img/main-image.jpg") center/cover no-repeat;
 }
 @media (max-width: 74.375em) {
   .who__column::before {
@@ -623,7 +623,7 @@ h6 {
 
 .skills-range {
   background-color: #333;
-  padding: 0.9375rem 0;
+  padding: 2.1875rem 0;
 }
 .skills-range__row {
   display: -webkit-box;

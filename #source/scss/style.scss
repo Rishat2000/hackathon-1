@@ -1,0 +1,702 @@
+@use "sass:math";
+// Базовые стили
+@import url("https://fonts.googleapis.com/css?family=Montserrat:regular,500,600,700,800,900&display=swap");
+
+//REM
+@function toRem($px, $current: 16) {
+	$result: math.div($px, $current) + rem;
+	@return $result;
+}
+//EM
+@function em($px, $current: 16) {
+	$result: math.div($px, $current) + em;
+	@return $result;
+}
+
+$fontFamily: "Montserrat";
+$fontSize: toRem(18);
+
+$mainColor: #131313;
+$whiteColor: #fff;
+
+$minWidth: 320;
+$maxWidth: 1920;
+$maxWidthContainer: 1170;
+$containerPadding: 30;
+
+$containerWidth: $maxWidthContainer + $containerPadding;
+
+$pc: em($containerWidth);
+$tablet: em(991.98);
+$mobile: em(767.98);
+$mobileSmall: em(479.98);
+
+// Динамичный адаптив
+@mixin adaptiveValue($property, $startSize, $minSize, $keepSize: 0, $widthFrom: $containerWidth, $widthTo: $minWidth) {
+	@if ($startSize==0) {
+		$startSize: 0.000001;
+	}
+	@if ($minSize==0) {
+		$minSize: 0.000001;
+	}
+
+	//ДляCalc();
+	$addSize: math.div($startSize - $minSize, 16);
+
+	@if ($widthFrom == $containerWidth and $maxWidthContainer == 0) {
+		$widthFrom: $maxWidth;
+	}
+
+	// перерывы в эм
+	$widthFromMedia: em($widthFrom);
+	$widthToMedia: em($widthTo);
+
+	// формула плавающего значения
+	// Источник: https://css-tricks.com/linearly-scale-font-size-with-css-clamp-based-on-the-viewport/
+	$slope: math.div(($startSize - $minSize), ($widthFrom - $widthTo));
+	$yIntersection: -$widthTo * $slope + $minSize;
+	@if ($yIntersection==0) {
+		$yIntersection: 0.000001;
+	}
+	$flyValue: #{toRem($yIntersection)}" + " #{$slope * 100}vw;
+
+	// получение значения свойства
+	$propertyValue: #{"clamp(" toRem($minSize) "," $flyValue "," toRem($startSize) ")"};
+	// Если отрицательные значения
+	@if ($minSize > $startSize) {
+		$propertyValue: #{"clamp(" toRem($startSize) "," $flyValue "," toRem($minSize) ")"};
+	}
+
+	// Установить значение по умолчанию
+	@if $keepSize != 1 and $keepSize != 3 {
+		@media (min-width: $widthFromMedia) {
+			#{$property}: toRem($startSize);
+		}
+	}
+	// адаптировать размер в промежутке между указанной шириной
+	@media (min-width: $widthToMedia) and (max-width: $widthFromMedia) {
+		// Если Clamp () поддерживается;
+		@supports (#{$property}: $propertyValue) {
+			#{$property}: $propertyValue;
+		}
+		// если не поддерживается зажим ();
+		@supports not (#{$property}: $propertyValue) {
+			#{$property}: calc(#{toRem($minSize)} + #{$addSize} * (100vw - #{toRem($widthTo)}) / #{math.div($widthFrom, 16) - math.div($widthTo, 16)});
+		}
+	}
+	@if $keepSize != 1 and $keepSize != 2 {
+		@media (max-width: $widthToMedia) {
+			#{$property}: toRem($minSize);
+		}
+	}
+}
+
+// Обнуление стилей
+* {
+	padding: 0px;
+	margin: 0px;
+	border: 0px;
+}
+*,
+*:before,
+*:after {
+	box-sizing: border-box;
+}
+:focus,
+:active {
+	outline: none;
+}
+a:focus,
+a:active {
+	outline: none;
+}
+html,
+body {
+	height: 100%;
+	min-width: $minWidth + px;
+}
+body {
+	color: $mainColor;
+	line-height: 1;
+	font-weight: 500;
+	font-family: $fontFamily;
+	font-size: $fontSize;
+	text-rendering: optimizeLegibility;
+	-ms-text-size-adjust: 100%;
+	-moz-text-size-adjust: 100%;
+	-webkit-text-size-adjust: 100%;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+input,
+button,
+textarea {
+	font-family: $fontFamily;
+	font-size: inherit;
+	line-height: inherit;
+}
+button {
+	cursor: pointer;
+	color: inherit;
+	background-color: transparent;
+}
+a {
+	color: inherit;
+	text-decoration: none;
+}
+ul li {
+	list-style: none;
+}
+img {
+	vertical-align: top;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-weight: inherit;
+	font-size: inherit;
+}
+
+// Адаптируем картинку под размеры блока
+[class*="-ibg"] {
+	position: relative;
+	img {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		top: 0;
+		left: 0;
+		object-fit: cover;
+	}
+}
+
+// Прижимаем footer к низу экрана
+.wrapper {
+	min-height: 100%;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	@supports (overflow: clip) {
+		overflow: clip;
+	}
+	// Притискаємо footer
+	> main {
+		flex: 1 1 auto;
+	}
+	// Фікс для слайдерів
+	> * {
+		min-width: 0;
+	}
+}
+
+// Ограничивающий контейнер
+[class*="__container"] {
+	@if ($maxWidthContainer>0) {
+		max-width: toRem($containerWidth);
+		margin: 0 auto;
+	}
+	@if ($containerPadding>0) {
+		@if ($maxWidthContainer>0) {
+			padding: 0 toRem(math.div($containerPadding, 2));
+		} @else {
+			@include adaptiveValue("padding-left", math.div($containerPadding, 2), 15);
+			@include adaptiveValue("padding-right", math.div($containerPadding, 2), 15);
+		}
+	}
+}
+
+//========================================================================================================================================================
+
+// Главные стили
+
+.header {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	padding: toRem(15) 0;
+	animation: headerShow 1s linear;
+	z-index: 2;
+	background-color: $whiteColor;
+	&__container {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+	&__logo {
+		padding: toRem(25) toRem(15);
+		background-color: $mainColor;
+		color: $whiteColor;
+		border-radius: toRem(15);
+		letter-spacing: 2px;
+		text-transform: uppercase;
+		transition: all 0.3s;
+		span {
+			background-color: $whiteColor;
+			color: $mainColor;
+			text-align: center;
+			font-weight: 700;
+			margin-left: toRem(2);
+		}
+		@media (any-hover: hover) {
+			&:hover {
+				background-color: #333;
+			}
+		}
+	}
+	&__menu {
+	}
+	&__contact {
+	}
+	&__link {
+		transition: all 0.3s;
+		padding: toRem(25) toRem(15);
+		border-radius: toRem(15);
+		@media (any-hover: hover) {
+			&:hover {
+				color: $whiteColor;
+				background-color: rgb(90, 125, 188);
+			}
+		}
+		@media (max-width: em(360)) {
+			background-color: rgb(90, 125, 188);
+			color: $whiteColor;
+			@media (any-hover: hover) {
+				&:hover {
+					color: $whiteColor;
+					background-color: rgb(90, 125, 188);
+				}
+			}
+		}
+	}
+}
+.menu {
+	&__icon {
+	}
+	&__body {
+	}
+	&__list {
+		display: flex;
+		@include adaptiveValue("column-gap", 55, 15);
+	}
+	&__item {
+		position: relative;
+		&::before {
+			content: "";
+			position: absolute;
+			width: calc(100% - toRem(20));
+			height: 3px;
+			bottom: toRem(-10);
+			left: toRem(10);
+			visibility: hidden;
+			background-color: #131313;
+		}
+		@media (any-hover: hover) {
+			&:hover {
+				&::before {
+					visibility: visible;
+				}
+			}
+		}
+	}
+	&__link {
+	}
+}
+.menu__icon {
+	display: none;
+}
+@media (min-width: 651px) {
+	.menu__list {
+		display: flex;
+		align-items: center;
+	}
+	.menu__sub-list {
+		transform: translate(0px, 10%);
+		opacity: 0;
+		visibility: hidden;
+		pointer-events: none;
+		transition: all 0.3s ease 0s;
+	}
+}
+@media (max-width: 650px) {
+	.menu__icon {
+		z-index: 5;
+		display: block;
+		position: relative;
+		width: 30px;
+		height: 18px;
+		cursor: pointer;
+	}
+	.menu__icon span,
+	.menu__icon::before,
+	.menu__icon::after {
+		left: 0;
+		position: absolute;
+		height: 10%;
+		width: 100%;
+		transition: all 0.3s ease 0s;
+		background-color: #131313;
+	}
+	.menu__icon::before,
+	.menu__icon::after {
+		content: "";
+	}
+	.menu__icon::before {
+		top: 0;
+	}
+	.menu__icon::after {
+		bottom: 0;
+	}
+	.menu__icon span {
+		top: 50%;
+		transform: scale(1) translate(0px, -50%);
+	}
+
+	.menu__icon._active span {
+		transform: scale(0) translate(0px, -50%);
+	}
+	.menu__icon._active::before {
+		top: 50%;
+		transform: rotate(-45deg) translate(0px, -50%);
+	}
+	.menu__icon._active::after {
+		bottom: 50%;
+		transform: rotate(45deg) translate(0px, 50%);
+	}
+
+	.menu__body {
+		position: fixed;
+		top: 0;
+		left: -100%;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(234, 234, 234, 0.941);
+		padding: 100px 30px 30px 30px;
+		transition: left 0.3s ease 0s;
+		overflow: auto;
+		z-index: 2;
+	}
+	.menu__body._active {
+		left: 0;
+	}
+	.menu__list {
+		flex-direction: column;
+	}
+	.menu__list > li {
+		flex-wrap: wrap;
+		margin: 0px 0px 30px 0px;
+	}
+	.menu__list > li:last-child {
+		margin-bottom: 0;
+	}
+	.menu__list > li._active .menu__sub-list {
+		display: block;
+	}
+	.menu__link {
+		font-size: 34px;
+		font-weight: 700;
+	}
+	.menu__sub-list {
+		position: relative;
+		background-color: #fff;
+		flex: 1 1 100%;
+		margin: 20px 0px 0px 0px;
+		display: none;
+	}
+	.menu__sub-link {
+		font-size: 20px;
+		color: #000;
+	}
+}
+// @keyframes headerShow {
+// 	0% {
+// 		transform: translate(0px, -100%);
+// 	}
+// 	100% {
+// 		transform: translate(0px, 0px);
+// 	}
+// }
+//========================================================================================================================================================
+.who {
+	@include adaptiveValue("padding-top", 50, 30);
+	@include adaptiveValue("padding-bottom", 50, 30);
+	margin-top: toRem(80);
+	&__container {
+	}
+	&__column {
+		position: relative;
+		&::before {
+			content: "";
+			position: absolute;
+			width: toRem(460);
+			height: toRem(500);
+			top: 0;
+			right: toRem(11);
+			border-radius: 0 50px;
+			z-index: -1;
+			background: url("/img/main-image.jpg") center / cover no-repeat;
+		}
+		@media (max-width: em(1190)) {
+			&::before {
+				display: none;
+			}
+		}
+	}
+	&__title {
+		margin-top: toRem(10);
+		font-size: toRem(170);
+		@include adaptiveValue("font-size", 170, 50);
+		font-weight: 800;
+		line-height: 100%;
+		text-transform: uppercase;
+		margin-bottom: toRem(15);
+		p:first-child {
+			background: linear-gradient(269deg, #f43366 0.72%, #3c33ef 103.58%);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			color: #f43366;
+		}
+		span {
+			color: $whiteColor;
+			@media (max-width: em(1190)) {
+				color: $mainColor;
+			}
+		}
+	}
+	&__sub-title {
+		color: #666;
+		@include adaptiveValue("font-size", 20, 18);
+		font-weight: 400;
+		line-height: 33px;
+		margin-bottom: toRem(15);
+	}
+	&__git {
+		display: flex;
+		align-items: center;
+		column-gap: toRem(15);
+		img {
+			transform: rotate(-90deg);
+			width: toRem(30);
+			height: toRem(30);
+		}
+		span {
+			color: rgb(255, 191, 0);
+		}
+	}
+}
+//========================================================================================================================================================
+.skills {
+	@include adaptiveValue("padding-top", 80, 20);
+	@include adaptiveValue("padding-bottom", 80, 20);
+	&__container {
+	}
+	&__title {
+		@include adaptiveValue("font-size", 50, 20);
+		font-weight: 900;
+		text-transform: uppercase;
+		text-align: center;
+		margin-bottom: toRem(25);
+	}
+	&__row {
+		display: flex;
+		justify-content: center;
+		row-gap: toRem(25);
+		column-gap: toRem(35);
+		flex-wrap: wrap;
+	}
+	&__column {
+	}
+	&__image-ibg {
+		width: toRem(200);
+		padding-bottom: toRem(200);
+		img {
+			max-width: 100%;
+		}
+	}
+}
+//========================================================================================================================================================
+.skills-range {
+	background-color: #333;
+	padding: toRem(15) 0;
+	&__container {
+	}
+	&__row {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		row-gap: toRem(25);
+	}
+	&__column {
+		&:nth-child(1) .skills-range__line::before {
+			content: "";
+			width: 98%;
+		}
+		&:nth-child(2) .skills-range__line::before {
+			content: "";
+			width: 90%;
+		}
+		&:nth-child(3) .skills-range__line::before {
+			content: "";
+			width: 18%;
+		}
+		&:nth-child(4) .skills-range__line::before {
+			content: "";
+			width: 25%;
+		}
+		&:nth-child(5) .skills-range__line::before {
+			content: "";
+			width: 14%;
+		}
+	}
+	&__title {
+		font-size: toRem(20);
+		text-transform: uppercase;
+		font-weight: 700;
+		margin-bottom: toRem(15);
+		color: $whiteColor;
+	}
+	&__line {
+		width: 100%;
+		height: toRem(30);
+		background-color: $whiteColor;
+		border-radius: toRem(20);
+		padding: toRem(5) toRem(15);
+		position: relative;
+		color: $whiteColor;
+		font-size: toRem(18);
+		font-weight: 700;
+		z-index: 1;
+		&::before {
+			content: "";
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			top: 0;
+			left: 0;
+			z-index: -1;
+			background: linear-gradient(269deg, #f43366 0.72%, #3c33ef 103.58%);
+			border-radius: toRem(20);
+		}
+	}
+}
+//========================================================================================================================================================
+.chill {
+	padding-top: toRem(60);
+	padding-bottom: toRem(60);
+	&__container {
+	}
+	&__title {
+		@media (max-width: em(1040)) {
+			@include adaptiveValue("margin-bottom", 110, 50);
+		}
+	}
+	&__row {
+	}
+	&__column {
+		display: flex;
+		align-items: center;
+		column-gap: toRem(15);
+		justify-content: flex-start;
+		&:not(:last-child) {
+			margin-bottom: toRem(25);
+		}
+		@media (min-width: em(1041)) {
+			&:nth-child(2),
+			&:nth-child(4) {
+				flex-direction: row-reverse;
+			}
+		}
+		@media (max-width: em(1040)) {
+			flex-direction: column;
+			justify-content: center;
+		}
+	}
+	&__text {
+		@include adaptiveValue("font-size", 45, 25);
+		text-transform: uppercase;
+		flex: 0 1 50%;
+		@include adaptiveValue("line-height", 50, 32);
+		font-weight: 600;
+		@media (max-width: em(1040)) {
+			margin-bottom: toRem(25);
+			text-align: center;
+		}
+	}
+	&__image-ibg {
+		width: toRem(400);
+		padding-bottom: toRem(400);
+		img {
+			border-radius: toRem(20);
+		}
+	}
+	&__video {
+		@include adaptiveValue("width", 500, 320);
+		@include adaptiveValue("height", 500, 320);
+	}
+}
+//========================================================================================================================================================
+.footer {
+	background-color: $mainColor;
+	padding: toRem(90) 0;
+	&__container {
+	}
+	&__logo {
+		@include adaptiveValue("font-size", 85, 45);
+		text-align: center;
+		margin: 0 auto;
+		color: $whiteColor;
+		span {
+			background-color: $whiteColor;
+			color: $mainColor;
+		}
+	}
+}
+
+// Вторая страница
+
+.works {
+	background-color: #cdbebe;
+	padding: toRem(50) 0;
+	margin: 0 auto;
+	&__container {
+	}
+	&__title {
+		@include adaptiveValue("font-size", 55, 25);
+		text-align: center;
+		margin-bottom: toRem(45);
+	}
+	&__row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-start;
+		justify-content: center;
+		row-gap: toRem(35);
+		column-gap: toRem(25);
+		height: 100%;
+	}
+	&__column {
+		flex: 0 1 toRem(500);
+		text-align: center;
+	}
+	&__image-ibg {
+		@include adaptiveValue("width", 500, 250);
+		@include adaptiveValue("padding-bottom", 500, 250);
+		margin: 0 auto toRem(25) auto;
+		img {
+			max-width: 100%;
+			border-radius: toRem(18);
+		}
+	}
+	&__sub-title {
+		font-size: toRem(20);
+		font-weight: 600;
+		margin-bottom: toRem(15);
+	}
+	&__link {
+		color: #333;
+		text-decoration: underline;
+	}
+}
